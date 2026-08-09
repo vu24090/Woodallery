@@ -1,12 +1,16 @@
 package com.showroom.model;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbBean;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondaryPartitionKey;
+import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbSecondarySortKey;
 
 @DynamoDbBean
 public class Product {
     private String productId;
-    private String categoryId;
     private String name;
     private String slug;
     private String description;
@@ -14,14 +18,13 @@ public class Product {
     private String color;
     private String dimensions;
     private double price;
-    private String status;
+    private String createAt;
 
     public Product() {
     }
 
-    public Product(String productId, String categoryId, String name, String slug, String description, String material, String color, String dimensions, double price, String status) {
+    public Product(String productId, String name, String slug, String description, String material, String color, String dimensions, double price, String createAt) {
         this.productId = productId;
-        this.categoryId = categoryId;
         this.name = name;
         this.slug = slug;
         this.description = description;
@@ -29,7 +32,7 @@ public class Product {
         this.color = color;
         this.dimensions = dimensions;
         this.price = price;
-        this.status = status;
+        this.createAt = createAt;
     }
 
     @DynamoDbPartitionKey
@@ -41,14 +44,9 @@ public class Product {
         this.productId = productId;
     }
 
-    public String getCategoryId() {
-        return categoryId;
-    }
-
-    public void setCategoryId(String categoryId) {
-        this.categoryId = categoryId;
-    }
-
+    @DynamoDbSecondaryPartitionKey(indexNames = "NameWithPriceIndex")
+    @NotBlank(message = "Name is required")
+    @Size(min = 1, max = 100, message = "Name must be between 1 and 300 characters")
     public String getName() {
         return name;
     }
@@ -57,6 +55,7 @@ public class Product {
         this.name = name;
     }
 
+    @NotBlank(message = "Slug is required")
     public String getSlug() {
         return slug;
     }
@@ -97,6 +96,8 @@ public class Product {
         this.dimensions = dimensions;
     }
 
+    @DynamoDbSecondarySortKey(indexNames = "NameWithPriceIndex")
+    @PositiveOrZero(message = "Price must be a positive number")
     public double getPrice() {
         return price;
     }
@@ -105,11 +106,11 @@ public class Product {
         this.price = price;
     }
 
-    public String getStatus() {
-        return status;
+    public String getCreateAt() {
+        return createAt;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setCreateAt(String createAt) {
+        this.createAt = createAt;
     }
 }

@@ -6,7 +6,10 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 
 import com.showroom.service.ProductService;
+import com.showroom.common.ApiResponse;
+import com.showroom.common.ProductValidator;
 import com.showroom.model.Product;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +26,26 @@ public class ProductHandler implements RequestHandler<APIGatewayProxyRequestEven
         try {
 
             if ("GET".equals(method) && path.equals("/products")) {
+                Map<String, String> queryParams = event.getQueryStringParameters();
+                String name = queryParams != null ? queryParams.get("name") : null;
+                if (name != null && !name.isEmpty()) {
+                    return getProductsByName(name);
+                }
                 return getAllProducts();
             }
 
             if ("GET".equals(method) && path.matches("/products/[^/]+")) {
-                String id =
-                        path.substring(path.lastIndexOf("/") + 1);
+                String id = path.substring(path.lastIndexOf("/") + 1);
                 return getProduct(id);
             }
 
             if ("POST".equals(method) && path.equals("/products")) {
                 return createProduct(event);
+            }
+
+            if ("PUT".equals(method) && path.matches("/products/[^/]+")) {
+                String id = path.substring(path.lastIndexOf("/") + 1);
+                return updateProduct(id, event);
             }
 
             if ("DELETE".equals(method) && path.matches("/products/[^/]+")) {
@@ -43,43 +55,37 @@ public class ProductHandler implements RequestHandler<APIGatewayProxyRequestEven
 
             return response(
                     404,
-                    "{\"message\":\"Route not found\"}"
+                    objectMapper.writeValueAsString(ApiResponse.error("Not Found"))
             );
 
         } catch (Exception e) {
 
-            e.printStackTrace();
 
             return response(
-                    500,
-                    "{\"message\":\"Internal Server Error\"}"
+                    500,"{\"message\":\"Internal Server Error\"}"
             );
         }
     }
 
-    private APIGatewayProxyResponseEvent getAllProducts() {
+    private APIGatewayProxyResponseEvent getAllProducts() throws JsonProcessingException {
         List<Product> products = productService.getAllProducts();
         try {
             String responseBody = objectMapper.writeValueAsString(products);
             return response(200, responseBody);
         } catch (Exception e) {
-            return response(500, "{\"message\":\"Error processing products\"}");
+            return response(500, objectMapper.writeValueAsString(ApiResponse.error("Error processing products")));
         }
     }
 
-    private APIGatewayProxyResponseEvent getProduct(String slug) {
-        Product product = productService.getProductBySlug(slug);
+    private APIGatewayProxyResponseEvent getProduct(String id) throws JsonProcessingException {
+        Product product = productService.getProductById(id);
     
         if (product == null) {
-            return response(404, "{\"message\":\"Product not found\"}");
+            return response(404, objectMapper.writeValueAsString(ApiResponse.error("Product not found")));
         }
     
         try {
-            ObjectMapper objectMapper = new ObjectMapper();
-    
-            String body = objectMapper.writeValueAsString(product);
-    
-            return response(200, body);
+            return response(200, objectMapper.writeValueAsString(product));
     
         } catch (Exception e) {
             e.printStackTrace();
@@ -87,27 +93,45 @@ public class ProductHandler implements RequestHandler<APIGatewayProxyRequestEven
         }
     }
 
-    private APIGatewayProxyResponseEvent createProduct(APIGatewayProxyRequestEvent event) {
-        try {
-            ObjectMapper objectMapper = new ObjectMapper();
+    private APIGatewayProxyResponseEvent createProduct(APIGatewayProxyRequestEvent event) throws JsonProcessingException {
             Product product = objectMapper.readValue(event.getBody(), Product.class);
+            String validationError = ProductValidator.validate(product);
+            if (validationError != null) {
+                return response(400,objectMapper.writeValueAsString(ApiResponse.error(validationError)));
+            }
             Product createdProduct = productService.createProduct(product);
-            String responseBody = objectMapper.writeValueAsString(createdProduct);
-            return response(201, responseBody);
-        } catch (Exception e) {
-            e.printStackTrace();
-            return response(500, "{\"message\":\"Error creating product\"}");
+            return response(201, objectMapper.writeValueAsString(ApiResponse.success("Product created successfully", createdProduct)));
+    }
+
+    private APIGatewayProxyResponseEvent deleteProduct(String id) throws JsonProcessingException {
+        boolean product = productService.deleteProduct(id);
+        if (product) {
+            return response(204, objectMapper.writeValueAsString(ApiResponse.success("Product deleted successfully", product)));
+        } else {
+            return response(404, objectMapper.writeValueAsString(ApiResponse.error("Product not found")));
         }
     }
 
-    private APIGatewayProxyResponseEvent deleteProduct(String id) {
-        boolean product = productService.deleteProduct(id);
-        if (product) {
-            return response(204, "");
-        } else {
-            return response(404, "{\"message\":\"Product not found\"}");
+    private APIGatewayProxyResponseEvent getProductsByName(String name) throws JsonProcessingException {
+        List<Product> products = productService.getProductsByName(name);
+        try {
+            String responseBody = objectMapper.writeValueAsString(products);
+            return response(200, responseBody);
+        } catch (Exception e) {
+            return response(500, objectMapper.writeValueAsString(ApiResponse.error("Error processing products by name")));
         }
     }
+
+    private APIGatewayProxyResponseEvent updateProduct(String id, APIGatewayProxyRequestEvent event) throws JsonProcessingException {
+        Product product = objectMapper.readValue(event.getBody(), Product.class);
+        String validationError = ProductValidator.validate(product);
+        if (validationError != null) {
+            return response(400, objectMapper.writeValueAsString(ApiResponse.error(validationError)));
+        }
+        Product updatedProduct = productService.updateProduct(id, product);
+        return response(200, objectMapper.writeValueAsString(ApiResponse.success("Product updated successfully", updatedProduct)));
+    }
+
 
     private APIGatewayProxyResponseEvent response(int statusCode, String body) {
         return new APIGatewayProxyResponseEvent()
@@ -115,4 +139,5 @@ public class ProductHandler implements RequestHandler<APIGatewayProxyRequestEven
                 .withHeaders(Map.of("Content-Type", "application/json"))
                 .withBody(body);
     }
+
 }

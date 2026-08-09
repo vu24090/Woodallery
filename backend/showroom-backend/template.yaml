@@ -47,6 +47,12 @@ Resources:
             Path: /products
             Method: post
 
+        UpdateProduct:
+          Type: Api
+          Properties:
+            Path: /products/{productId}
+            Method: put
+
         DeleteProduct:
           Type: Api
           Properties:
