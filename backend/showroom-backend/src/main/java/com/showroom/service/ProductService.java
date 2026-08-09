@@ -1,8 +1,10 @@
 package com.showroom.service;
 
+import com.showroom.exception.ProductNotFoundException;
 import com.showroom.model.Product;
 import com.showroom.repository.ProductRepository;
 
+import java.time.Instant;
 import java.util.*;
 
 public class ProductService {
@@ -16,11 +18,18 @@ public class ProductService {
         return productRepository.getAllProducts();
     }
 
-    public Product getProductBySlug(String slug) {
-        return productRepository.getProductById(slug);
+    public Product getProductById(String id) {
+        Product product = productRepository.getProductById(id);
+        if (product == null) {
+            throw new ProductNotFoundException(id);
+        }
+        return product;
     }
 
     public Product createProduct(Product product) {
+        String id = UUID.randomUUID().toString();
+        product.setProductId(id);
+        product.setCreateAt(Instant.now().toString());
         productRepository.saveProduct(product);
         return product;
     }
@@ -28,7 +37,7 @@ public class ProductService {
     public Product updateProduct(String id, Product product) {
         Product existingProduct = productRepository.getProductById(id);
         if (existingProduct == null) {
-            return null;
+            throw new ProductNotFoundException(id);
         }
         product.setProductId(existingProduct.getProductId());
         productRepository.saveProduct(product);
@@ -43,5 +52,9 @@ public class ProductService {
         }
         productRepository.deleteProduct(id);
         return true;
+    }
+
+    public List<Product> getProductsByName(String name) {
+        return productRepository.getProductsByName(name);
     }
 }
