@@ -1,6 +1,5 @@
 package com.showroom.service;
 
-import com.showroom.exception.ProductNotFoundException;
 import com.showroom.model.Product;
 import com.showroom.repository.ProductRepository;
 
@@ -28,6 +27,8 @@ public class ProductService {
 
     public Product createProduct(Product product) {
         String id = UUID.randomUUID().toString();
+        String slug = product.getName().toLowerCase().replace(" ", "-");
+        product.setSlug(slug);
         product.setProductId(id);
         product.setCreateAt(Instant.now().toString());
         productRepository.saveProduct(product);
@@ -40,6 +41,7 @@ public class ProductService {
             return null;
         }
         product.setProductId(existingProduct.getProductId());
+        product.setSlug(existingProduct.getSlug());
         product.setCreateAt(existingProduct.getCreateAt());
         productRepository.saveProduct(product);
         return product;
