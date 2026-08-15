@@ -1,5 +1,6 @@
 package com.showroom.repository;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import com.showroom.model.Product;
@@ -11,7 +12,7 @@ import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 
 public class ProductRepository {
     private final DynamoDbTable<Product> productTable;
-    private final DynamoDbIndex<Product> nameIndex;
+    private final DynamoDbIndex<Product> categoryWithNameIndex;
 
     public ProductRepository() {
         DynamoDbClient dynamoDbClient = DynamoDbClient.builder().build();
@@ -20,7 +21,7 @@ public class ProductRepository {
                 .build();
         
         productTable = enhancedClient.table("products", TableSchema.fromBean(Product.class));
-        nameIndex = productTable.index("NameWithPriceIndex");
+        categoryWithNameIndex = productTable.index("CategoryWithNameIndex");
     }
 
     public void saveProduct(Product product) {
@@ -41,13 +42,14 @@ public class ProductRepository {
         productTable.deleteItem(key);
     }
 
-    //lọc theo tên & giá
-    public List<Product> getProductsByName (String name) {
-        QueryConditional queryConditional = QueryConditional.keyEqualTo(Key.builder().partitionValue(name).build());
-        return nameIndex.query(queryConditional)
-                .stream()
-                .flatMap(page -> page.items().stream())
-                .toList();
+    //lọc product theo category & sort name
+    public List<Product> getProductByCategoryName(String category) {
+        QueryConditional queryConditional = QueryConditional.keyEqualTo(Key.builder().partitionValue(category).build());
+        List<Product> products = new ArrayList<>();
+        categoryWithNameIndex.query(r -> r.queryConditional(queryConditional))
+            .stream()
+            .flatMap(page -> page.items().stream())
+            .forEach(products::add);
+        return products;
     }
-
 }

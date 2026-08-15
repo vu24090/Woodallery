@@ -10,8 +10,8 @@ import java.util.*;
 public class ProductService {
     private final ProductRepository productRepository;
 
-    public ProductService() {
-        this.productRepository = new ProductRepository();
+    public ProductService(ProductRepository productRepository) {
+        this.productRepository = productRepository;
     }
 
     public List<Product> getAllProducts() {
@@ -21,7 +21,7 @@ public class ProductService {
     public Product getProductById(String id) {
         Product product = productRepository.getProductById(id);
         if (product == null) {
-            throw new ProductNotFoundException(id);
+            return null;
         }
         return product;
     }
@@ -37,9 +37,10 @@ public class ProductService {
     public Product updateProduct(String id, Product product) {
         Product existingProduct = productRepository.getProductById(id);
         if (existingProduct == null) {
-            throw new ProductNotFoundException(id);
+            return null;
         }
         product.setProductId(existingProduct.getProductId());
+        product.setCreateAt(existingProduct.getCreateAt());
         productRepository.saveProduct(product);
         return product;
     }
@@ -54,7 +55,21 @@ public class ProductService {
         return true;
     }
 
-    public List<Product> getProductsByName(String name) {
-        return productRepository.getProductsByName(name);
+    public List<Product> getProductByCategoryKeyword(String category, String keyword) {
+        List<Product> products = productRepository.getProductByCategoryName(category);
+
+        if (keyword == null || keyword.isBlank()) {
+            return products;
+        }
+
+        String keywordLower = keyword.toLowerCase();
+
+        return products.stream()
+                .filter(product ->
+                        product.getName() != null &&
+                        product.getName()
+                                .toLowerCase()
+                                .contains(keywordLower))
+                .toList();
     }
 }
