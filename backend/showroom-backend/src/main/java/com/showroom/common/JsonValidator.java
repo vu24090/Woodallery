@@ -7,7 +7,7 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 
-public class ProductValidator {
+public class JsonValidator {
     private static final Validator validator = Validation.buildDefaultValidatorFactory().getValidator();
 
     public static String validate(Object object) {
