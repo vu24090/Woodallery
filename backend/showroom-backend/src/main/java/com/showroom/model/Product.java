@@ -18,11 +18,12 @@ public class Product {
     private String color;
     private String dimensions;
     private String createAt;
+    private String imageUrl;
 
     public Product() {
     }
 
-    public Product(String productId, String category, String name, String slug, String description, String material, String color, String dimensions, String createAt) {
+    public Product(String productId, String category, String name, String slug, String description, String material, String color, String dimensions, String createAt, String imageUrl) {
         this.productId = productId;
         this.category = category;
         this.name = name;
@@ -32,6 +33,7 @@ public class Product {
         this.color = color;
         this.dimensions = dimensions;
         this.createAt = createAt;
+        this.imageUrl = imageUrl;
     }
 
     @DynamoDbPartitionKey
@@ -42,6 +44,7 @@ public class Product {
     public void setProductId(String productId) {
         this.productId = productId;
     }
+
     @DynamoDbSecondaryPartitionKey(indexNames = "CategoryWithNameIndex")
     @NotBlank(message = "Category is required")
     @Size(min = 1, max = 100, message = "Category must be between 1 and 100 characters")
@@ -110,5 +113,13 @@ public class Product {
 
     public void setCreateAt(String createAt) {
         this.createAt = createAt;
+    }
+
+    public String getImageUrl() {
+        return imageUrl;
+    }
+
+    public void setImageUrl(String imageUrl) {
+        this.imageUrl = imageUrl;
     }
 }
