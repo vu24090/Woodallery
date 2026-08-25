@@ -6,7 +6,7 @@ import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 
 public class ResponseUtil {
 
-    private final static String origin = "http://localhost:5173";
+    private final static String origin = "https://ds8embvnehnu8.cloudfront.net";
 
     private ResponseUtil() {
     }

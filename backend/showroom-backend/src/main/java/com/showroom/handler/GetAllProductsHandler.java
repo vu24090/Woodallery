@@ -45,11 +45,11 @@ public class GetAllProductsHandler implements RequestHandler<APIGatewayProxyRequ
                     "duration", System.currentTimeMillis() - startTime
                 )
             );
-            if (category != null) {
+            if (category != null && !category.isEmpty()) {
                 logger.info(
                     "FILLING_PRODUCTS_REQUEST_RECEIVED",
                     Map.of(
-                            "category", category,
+                            "category", category == null ? "" : category,
                             "keyword", keyword == null ? "" : keyword
                     )
                 );
@@ -57,7 +57,7 @@ public class GetAllProductsHandler implements RequestHandler<APIGatewayProxyRequ
                 logger.info(
                     "FILLING_PRODUCTS_REQUEST_COMPLETED",
                     Map.of(
-                            "category", category,
+                            "category", category == null ? "" : category,
                             "keyword", keyword == null ? "" : keyword,
                             "duration", System.currentTimeMillis() - startTime
                     )
