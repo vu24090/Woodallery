@@ -1,29 +1,25 @@
 import { useEffect, useState } from "react";
-
 import { getProductById } from "../services/productService";
-
 import type { Product } from "../types/product";
-
 import { getApiErrorMessage } from "../utils/apiError";
 
 export function useProduct(id?: string) {
   const [product, setProduct] = useState<Product | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!id) {
-      setProduct(null);
-      setLoading(false);
-      setError("Product ID không hợp lệ");
-      return;
-    }
-
     let cancelled = false;
 
-    async function loadProduct() {
+    (async () => {
+      if (!id) {
+        if (!cancelled) {
+          setError("Product ID không hợp lệ");
+          setLoading(false);
+        }
+        return;
+      }
+
       try {
         setLoading(true);
         setError(null);
@@ -33,27 +29,21 @@ export function useProduct(id?: string) {
         if (!cancelled) {
           setProduct(data);
         }
-      } catch (error) {
+      } catch (err) {
         if (!cancelled) {
-          setError(getApiErrorMessage(error));
+          setError(getApiErrorMessage(err));
         }
       } finally {
         if (!cancelled) {
           setLoading(false);
         }
       }
-    }
-
-    loadProduct();
+    })();
 
     return () => {
       cancelled = true;
     };
   }, [id]);
 
-  return {
-    product,
-    loading,
-    error,
-  };
+  return { product, loading, error };
 }
