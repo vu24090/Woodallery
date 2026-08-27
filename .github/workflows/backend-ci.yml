@@ -1,0 +1,38 @@
+name: backend CI
+
+on:
+  push:
+    branches:
+      - develop
+    paths:
+      - "backend/**"
+  pull_request:
+    branches:
+      - develop
+    paths:
+      - "backend/**"
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./backend/showroom-backend
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          java-version: "21"
+          distribution: "temurin"
+
+      - name: Dependency security check backend
+        run: mvn org.owasp:dependency-check-maven:check
+
+      - name: Test backend
+        run: mvn test
+
+      - name: Build lambda backend
+        run: sam build
