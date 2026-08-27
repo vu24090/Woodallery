@@ -8,8 +8,8 @@ export interface GetProductsParams {
 
 export function getProducts(params: GetProductsParams = {}) {
   const queryParams = Object.fromEntries(
-    Object.entries(params).filter(([_, value]) => value !== undefined)
-  ) as Record<string, string>;
+    Object.entries(params).filter(([, value]) => value != null)
+  );
   return apiClient.get<Product[]>("/products", queryParams);
 }
 

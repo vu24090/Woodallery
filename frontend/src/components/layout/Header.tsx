@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { login, logout } from "../../services/authService";
-import { useAuth } from "../../auth/AuthContext";
+import { useAuth } from "../auth/AuthContext";
 
 export default function Header() {
   const { isAuthenticated, isAdmin, isLoading, user } = useAuth();

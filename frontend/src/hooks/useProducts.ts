@@ -41,7 +41,9 @@ export function useProducts({
   }, [category, keyword]);
 
   useEffect(() => {
-    loadProducts();
+    (async () => {
+      await loadProducts();
+    })();
   }, [loadProducts]);
 
   return {
