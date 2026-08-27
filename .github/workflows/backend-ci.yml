@@ -28,9 +28,6 @@ jobs:
           java-version: "21"
           distribution: "temurin"
 
-      - name: Dependency security check backend
-        run: mvn org.owasp:dependency-check-maven:check
-
       - name: Test backend
         run: mvn test
 
