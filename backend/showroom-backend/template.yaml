@@ -1,0 +1,164 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  showroom-backend
+
+  Sample SAM Template for showroom-backend
+
+# More info about Globals: https://github.com/awslabs/serverless-application-model/blob/master/docs/globals.rst
+Parameters:
+  UserPoolArn:
+    Type: String
+    Description: "ARN of the Cognito User Pool for authentication"
+
+Globals:
+  Function:
+    Timeout: 20
+    MemorySize: 512
+
+Resources:
+  ProductsApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn:
+              Ref: UserPoolArn
+      Cors:
+        AllowOrigin: "'https://ds8embvnehnu8.cloudfront.net'"
+        AllowHeaders: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,X-Amz-User-Agent'"
+        AllowMethods: "'OPTIONS,GET,POST,PUT,DELETE'"
+
+  GetAllProductsFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: .
+      Handler: com.showroom.handler.GetAllProductsHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: products
+      Events:
+        GetProducts:
+          Type: Api # More info about API Event Source: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#api
+          Properties:
+            RestApiId:
+              Ref: ProductsApi
+            Path: /products
+            Method: get
+
+  GetProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: .
+      Handler: com.showroom.handler.GetProductHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: products
+      Events:
+        GetProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ProductsApi
+            Path: /products/{productId}
+            Method: get
+
+  CreateProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: .
+      Handler: com.showroom.handler.CreateProductHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: products
+      Events:
+        CreateProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ProductsApi
+            Path: /products
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - showroom-api/write
+
+  UpdateProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: .
+      Handler: com.showroom.handler.UpdateProductHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: products
+      Events:
+        UpdateProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ProductsApi
+            Path: /products/{productId}
+            Method: put
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - showroom-api/write
+
+  DeleteProductFunction:
+    Type: AWS::Serverless::Function # More info about Function Resource: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#awsserverlessfunction
+    Properties:
+      CodeUri: .
+      Handler: com.showroom.handler.DeleteProductHandler::handleRequest
+      Runtime: java21
+      Architectures:
+        - x86_64
+      MemorySize: 512
+      Environment: # More info about Env Vars: https://github.com/awslabs/serverless-application-model/blob/master/versions/2016-10-31.md#environment-object
+        Variables:
+          PARAM1: VALUE
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: products
+      Events:
+        DeleteProduct:
+          Type: Api
+          Properties:
+            RestApiId:
+              Ref: ProductsApi
+            Path: /products/{productId}
+            Method: delete
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - showroom-api/write
