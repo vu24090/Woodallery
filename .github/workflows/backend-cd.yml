@@ -1,4 +1,4 @@
-name: Deployment
+name: backend CD
 
 on:
   push:
@@ -21,6 +21,8 @@ jobs:
         with:
           role-to-assume: arn:aws:iam::011422533581:role/showroom-deploy-role
           aws-region: ap-southeast-1
+          retry-max-attempts: 1
+          action-timeout-s: 30
 
       - name: Check AWS credentials
         run: aws sts get-caller-identity
